@@ -53,23 +53,27 @@ function draw() {
   text("Last updated: " + (lastUpdated || "Loading..."), 30, 65);
 
   // 2. Render Dashboard Graphics
-  if (aquariumData) {
-    // NOTE: Update these keys based on your actual Seneye JSON response structure!
-    // Example fields commonly found in sensor data:
-    let temp = aquariumData.temperature || 24.5;
-    let ph = aquariumData.ph || 7.2;
-    let nh3 = aquariumData.nh3 || 0.01;
+function draw() {
+  background(245);
+  
+  // Call the header
+  drawHeader();
 
-    // Call your custom graphic widgets
-    drawTempWidget(50, 120, temp);
-    drawGaugeWidget(300, 120, "pH Level", ph, 6.0, 8.5);
-    drawGaugeWidget(550, 120, "Ammonia (NH3)", nh3, 0.0, 0.05);
+  if (dashboardData) {
+    // Extract numbers safely from data payload
+    let temp = dashboardData.temperature || 0;
+    let ph = dashboardData.ph || 0;
+    let nh3 = dashboardData.nh3 || 0;
 
+    // Call the card draw functions
+    drawMetricCard(50, 130, 230, 320, "Temperature", temp.toFixed(1) + " °C", getMetricStatus("temp", temp));
+    drawMetricCard(310, 130, 230, 320, "pH Level", ph.toFixed(2), getMetricStatus("ph", ph));
+    drawMetricCard(570, 130, 230, 320, "Ammonia (NH3)", nh3.toFixed(3) + " ppm", getMetricStatus("nh3", nh3));
   } else {
-    // Loading State
-    fill(255, 100, 100);
+    // Message displayed while waiting for data
+    fill(100);
     textSize(18);
-    text("Connecting to sensor stream...", 30, 120);
+    text("Loading sensor data...", width / 2, height / 2);
   }
 }
 
@@ -106,4 +110,29 @@ function drawGaugeWidget(x, y, label, val, minVal, maxVal) {
   fill(255);
   textSize(28);
   text(val, x + 15, y + 50);
+}
+
+// Dynamic status and visual alerts
+function getMetricStatus(type, val) {
+  if (type === "temp") {
+    if (val < 20.0 || val > 28.0) return { col: color(220, 50, 50), label: "WARNING" };
+    if (val >= 22.0 && val <= 26.0) return { col: color(40, 180, 90), label: "OPTIMAL" };
+    return { col: color(230, 160, 30), label: "CAUTION" };
+  }
+  
+  if (type === "ph") {
+    if (val < 6.5 || val > 8.2) return { col: color(220, 50, 50), label: "WARNING" };
+    if (val >= 6.8 && val <= 7.8) return { col: color(40, 180, 90), label: "OPTIMAL" };
+    return { col: color(230, 160, 30), label: "CAUTION" };
+  }
+  
+  if (type === "nh3") {
+    if (val > 0.05) return { col: color(220, 50, 50), label: "WARNING" };
+    if (val <= 0.02) return { col: color(40, 180, 90), label: "OPTIMAL" };
+    return { col: color(230, 160, 30), label: "CAUTION" };
+  }
+
+  return { col: color(150), label: "UNKNOWN" };
+}
+
 }
