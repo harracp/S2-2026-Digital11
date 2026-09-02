@@ -1,5 +1,5 @@
 // ===================================================
-// STUDENT TASK: Make a 
+// STUDENT TASK: Make a dashboard showing the required information for the fish
 // ===================================================
 
 // Replace this with your teacher's Cloudflare Worker URL:
