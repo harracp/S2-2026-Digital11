@@ -1,5 +1,5 @@
 // ===================================================
-// STUDENT TASK: Make a dashboard showing the required information for the fish
+// STUDENT TASK: Aquarium Environment Dashboard
 // ===================================================
 
 // Replace this with your teacher's Cloudflare Worker URL:
@@ -24,7 +24,7 @@ const RANGES = {
 function preload() {
   // Load initial data before setup() runs
   let endpoint = USE_OFFLINE_MOCK ? "sample-data.json" : PROXY_URL;
-  aquariumData = loadJSON(endpoint, onDataLoaded, onError);
+  loadJSON(endpoint, onDataLoaded, onError);
 }
 
 function setup() {
@@ -41,15 +41,74 @@ function setup() {
 }
 
 function onDataLoaded(data) {
-  aquariumData = data;
+  // The real Seneye API returns an ARRAY of devices, e.g.
+  // [ { id, description, type, status: {...}, ... } ]
+  // We only have one device, so unwrap it here and store the
+  // single device object instead of the whole array.
+  aquariumData = Array.isArray(data) ? data[0] : data;
   connectionStatus = "connected";
   lastUpdated = new Date();
+
+  // Full readable dump - keep this while debugging. Expand "status"
+  // in the console, or read the printed JSON, to see the exact key
+  // names your device reports (temperature/ph/nh3 may be spelled
+  // slightly differently, e.g. "water" or nested one level deeper).
   console.log("Data refreshed successfully:", data);
+  console.log("Device object JSON:\n" + JSON.stringify(aquariumData, null, 2));
 }
 
 function onError(err) {
-  connectionStatus = "error";
-  console.error("Failed to load aquarium data. Check proxy URL or network.", err);
+  console.error("Failed to load aquarium data. Trying fallback...", err);
+
+  // Attempt local fallback if live connection fails
+  if (!USE_OFFLINE_MOCK) {
+    loadJSON("sample-data.json", (fallbackData) => {
+      aquariumData = fallbackData;
+      connectionStatus = "connected (offline mode)";
+      lastUpdated = new Date();
+    }, () => {
+      connectionStatus = "error";
+    });
+  } else {
+    connectionStatus = "error";
+  }
+}
+
+// ---------- Robust sensor value parser ----------
+// Different proxies/APIs nest the same reading in different places
+// (flat, under "experiment", under "data", inside an array, etc).
+// This tries several likely locations and key names, and unwraps
+// nested {curr: ...} / {value: ...} style objects, before giving up.
+function parseSensorValue(data, keys) {
+  if (!data) return 0;
+
+  const containers = [
+    data.exps,
+    data,
+    data.status,
+    data.experiment,
+    data.data,
+    data.device,
+    Array.isArray(data.readings) ? data.readings[0] : null,
+    data.SUD && data.SUD.data ? data.SUD.data : null
+  ];
+
+  for (const source of containers) {
+    if (!source) continue;
+    for (const key of keys) {
+      let val = source[key];
+      if (val === undefined || val === null) continue;
+
+      if (typeof val === 'object') {
+        val = val.curr ?? val.value ?? val.val ?? val.reading;
+      }
+
+      if (val !== undefined && val !== null && val !== "" && !isNaN(Number(val))) {
+        return Number(val);
+      }
+    }
+  }
+  return 0;
 }
 
 function draw() {
@@ -58,10 +117,12 @@ function draw() {
   drawHeader();
 
   if (aquariumData) {
-    // Extract numbers safely from the data payload
-    let temp = Number(aquariumData.temperature ?? 0);
-    let ph   = Number(aquariumData.ph ?? 0);
-    let nh3  = Number(aquariumData.nh3 ?? aquariumData.ammonia ?? 0);
+    // Try the most likely key names for each metric.
+    // If values still show 0, check the console.log output above and
+    // add whatever key name your proxy actually uses to these lists.
+    let temp = parseSensorValue(aquariumData, ["temperature", "temp", "T"]);
+    let ph   = parseSensorValue(aquariumData, ["ph", "pH", "P"]);
+    let nh3  = parseSensorValue(aquariumData, ["nh3", "ammonia", "NH3", "N"]);
 
     drawMetricCard(30, 110, 230, 340, "Temperature", temp, "°C", "temp");
     drawMetricCard(285, 110, 230, 340, "pH Level", ph, "", "ph");
@@ -92,7 +153,7 @@ function drawHeader() {
 
 function drawConnectionIndicator(x, y) {
   let col, label;
-  if (connectionStatus === "connected") { col = color(60, 200, 100); label = "Connected"; }
+  if (connectionStatus.includes("connected")) { col = color(60, 200, 100); label = "Connected"; }
   else if (connectionStatus === "error") { col = color(220, 60, 60); label = "Connection Error"; }
   else { col = color(230, 180, 40); label = "Connecting..."; }
 
