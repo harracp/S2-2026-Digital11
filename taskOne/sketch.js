@@ -28,7 +28,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(800, 500);
+  createCanvas(1100, 650);
   textFont('Helvetica');
 
   // Refresh live data every 5 minutes
@@ -124,9 +124,9 @@ function draw() {
     let ph   = parseSensorValue(aquariumData, ["ph", "pH", "P"]);
     let nh3  = parseSensorValue(aquariumData, ["nh3", "ammonia", "NH3", "N"]);
 
-    drawMetricCard(30, 110, 230, 340, "Temperature", temp, "°C", "temp");
-    drawMetricCard(285, 110, 230, 340, "pH Level", ph, "", "ph");
-    drawMetricCard(540, 110, 230, 340, "Ammonia (NH3)", nh3, "ppm", "nh3");
+    drawMetricCard(40, 130, 320, 460, "Temperature", temp, "°C", "temp");
+    drawMetricCard(390, 130, 320, 460, "pH Level", ph, "", "ph");
+    drawMetricCard(740, 130, 320, 460, "Ammonia (NH3)", nh3, "ppm", "nh3");
   } else {
     fill(200);
     textSize(18);
