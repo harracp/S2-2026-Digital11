@@ -147,7 +147,7 @@ function drawHeader() {
   fill(150, 200, 255);
   let stamp = lastUpdated ? lastUpdated.toLocaleTimeString() : "Waiting for first reading...";
   text("Last updated: " + stamp, 30, 60);
-
+ 
   drawConnectionIndicator(width - 170, 30);
 }
 
@@ -178,7 +178,7 @@ function drawMetricCard(x, y, w, h, label, value, unit, metricKey) {
   // Colored top strip shows status at a glance
   fill(status.col);
   rect(x, y, w, 8, 12, 12, 0, 0);
-
+   
   // Label
   fill(200, 215, 230);
   textSize(15);
