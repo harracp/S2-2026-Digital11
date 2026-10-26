@@ -1,6 +1,6 @@
 import requests
 
-headers = {"User-Agent": "MyBarcodeApp/1.0 (ADD YOUR EMAIL)"}
+headers = {"User-Agent": "MyBarcodeApp/1.0 harracp@pedarecc.sa.edu.au"}
 
 DEFAULT_BARCODE = "3033710065967"  # Weetabix
 COMPARE_BARCODES = ["3017620422003", "5449000000996", "7622210449283"]  # Nutella, Coke, Oreo
