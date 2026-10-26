@@ -13,3 +13,19 @@ print(f"Name: {product.get('product_name', 'Not found')}")
 print(f"Brand: {product.get('brands', 'Not found')}")
 print(f"Nutri-Score: {product.get('nutriscore_grade', 'Not listed')}")
 print(f"Energy: {product.get('nutriments', {}).get('energy-kcal_100g', 'Not listed')} kcal/100g")
+
+
+def get_product(barcode):
+    url = f"https://world.openfoodfacts.org/api/v2/product/{barcode}"
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
+    except (requests.exceptions.RequestException, ValueError):
+        print("Could not reach OpenFoodFacts. Check your internet and try again.")
+        return None
+
+    if data.get("status") != 1:
+        print("Product not found. Check the barcode and try again.")
+        return None
+
+    return data.get("product", {})
