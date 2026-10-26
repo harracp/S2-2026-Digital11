@@ -1,14 +1,15 @@
 import requests
-from datetime import date
 
+headers = {"User-Agent": "MyBarcodeApp/1.0 (ADD YOUR EMAIL)"}
 
-barcode = input("Barcode: ")
-url = f"https://world.openfoodfacts.net/api/v2/product/{barcode}"
-response = requests.get(url)
-#print(response.json())
+barcode = input("Enter a barcode: ")
+url = f"https://world.openfoodfacts.org/api/v2/product/{barcode}"
 
+response = requests.get(url, headers=headers)
 data = response.json()
 
-product_name = data.get("product", {}).get("product_name", "Product name not found")
-ingredients = data.get("product", {}).get("ingredients_text", "Product ingredients not found")
-print(f"Product Name: {product_name}")
+product = data.get("product", {})
+print(f"Name: {product.get('product_name', 'Not found')}")
+print(f"Brand: {product.get('brands', 'Not found')}")
+print(f"Nutri-Score: {product.get('nutriscore_grade', 'Not listed')}")
+print(f"Energy: {product.get('nutriments', {}).get('energy-kcal_100g', 'Not listed')} kcal/100g")
